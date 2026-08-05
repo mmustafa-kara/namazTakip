@@ -7,7 +7,9 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/theme/theme.dart';
 import 'services/local_storage_service.dart';
-import 'views/home_view.dart';
+import 'services/notification_service.dart';
+import 'viewmodels/settings_viewmodel.dart';
+import 'views/main_layout.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +36,9 @@ Future<void> main() async {
   final localDb = LocalStorageService();
   await localDb.init();
 
+  // Bildirim servisini ve yerel saat dilimlerini başlat
+  await NotificationService().init();
+
   runApp(const ProviderScope(child: EzanVaktiApp()));
 }
 
@@ -43,15 +48,15 @@ class EzanVaktiApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO (Faz 2 tamamlanınca): themeProvider ile dinamik tema geçişi
-    const themeMode = ThemeMode.dark;
+    // Ayarlar provider'ından aktif temayı oku (Dark/Light/System)
+    final settings = ref.watch(settingsProvider);
 
     return MaterialApp(
       title: 'Ezan Vakti Pro',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: themeMode,
+      themeMode: settings.themeMode,
 
       // Türkçe tarih ve genel lokalizasyon desteği
       locale: const Locale('tr', 'TR'),
@@ -62,8 +67,8 @@ class EzanVaktiApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      // Faz 4: Gerçek ana ekran
-      home: const HomeView(),
+      // Ana Ekran İskeleti (Bottom Navigation)
+      home: const MainLayout(),
     );
   }
 }

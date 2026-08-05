@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -9,8 +11,8 @@ typedef Coordinate = ({double latitude, double longitude});
 /// Kullanıcının konumunu (GPS) alan servis.
 /// AGENTS.md: İzin reddedilirse uygulamanın çökmemesi için sağlam bir B planı (Fallback) içermelidir.
 class LocationService {
-  // İzin verilmezse veya hata olursa kullanılacak nihai B Planı: İstanbul (Fatih) koordinatları
-  static const Coordinate _fallbackCoordinate = (latitude: 41.0082, longitude: 28.9784);
+  // İzin verilmezse veya hata olursa kullanılacak nihai B Planı: İnegöl, Bursa koordinatları
+  static const Coordinate _fallbackCoordinate = (latitude: 40.08, longitude: 29.51);
 
   /// Cihazın anlık konumunu döndürür. İzin yoksa veya kapalıysa son bilinen konumu
   /// veya varsayılan İstanbul konumunu döndürür.
@@ -46,6 +48,9 @@ class LocationService {
           accuracy: LocationAccuracy.low,
           distanceFilter: 5000, // 5km yer değiştirmeden yeni konum tetiklenmez
         ),
+      ).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () => throw TimeoutException('Konum 5sn içinde alınamadı'),
       );
       
       final coord = (latitude: pos.latitude, longitude: pos.longitude);

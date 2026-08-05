@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -26,38 +27,78 @@ class PrayerTimesNotifier extends AsyncNotifier<PrayerTime?> {
   /// 6. Gelen aylık veriyi Hive'a (LocalStorageService) kaydet.
   /// 7. Bugünün verisini UI'a dön.
   Future<PrayerTime?> _fetchAndCacheData() async {
-    final localDb = ref.read(localStorageServiceProvider);
-    final locationService = ref.read(locationServiceProvider);
-    final apiService = ref.read(apiServiceProvider);
+    try {
+      final localDb = ref.read(localStorageServiceProvider);
+      final locationService = ref.read(locationServiceProvider);
+      final apiService = ref.read(apiServiceProvider);
 
-    final now = DateTime.now();
-    // API'den "YYYY-MM-DD" formatında çevirmiştik, sorguyu aynı formatta yapıyoruz
-    final todayStr = DateFormat('yyyy-MM-dd').format(now);
+      final now = DateTime.now();
+      // API'den "YYYY-MM-DD" formatında çevirmiştik, sorguyu aynı formatta yapıyoruz
+      final todayStr = DateFormat('yyyy-MM-dd').format(now);
 
-    // 1. Veritabanı kontrolü (Sadece bu ay için)
-    final hasData = localDb.hasDataForMonth(now.year, now.month);
+      debugPrint('📍 Vakitler yükleniyor... ($todayStr)');
 
-    if (hasData) {
-      // Offline-first: Ağ isteği atmadan direkt veritabanından getir
-      return localDb.getPrayerTimeByDate(todayStr);
+      // 1. Veritabanı kontrolü (Sadece bu ay için)
+      final hasData = localDb.hasDataForMonth(now.year, now.month);
+
+      PrayerTime? todayData;
+
+      if (hasData) {
+        // Offline-first: Ağ isteği atmadan direkt veritabanından getir
+        debugPrint('✅ Cache Hit: Veritabanından getiriliyor...');
+        todayData = localDb.getPrayerTimeByDate(todayStr);
+      } else {
+        // 2. Veri yok, o zaman konumu bulalım (GPS izni yoksa B planı İstanbul gelecek)
+        debugPrint('🌐 Cache Miss: Konum alınıyor...');
+        final coord = await locationService.getCurrentLocation();
+        debugPrint('📍 Konum alındı: (${coord.latitude}, ${coord.longitude})');
+
+        // 3. Bulunan koordinatla API'den o ayın verilerini çek
+        debugPrint('🌐 API\'den aylık veriler çekiliyor...');
+        final monthlyData = await apiService.fetchMonthlyPrayerTimes(
+          latitude: coord.latitude,
+          longitude: coord.longitude,
+          year: now.year,
+          month: now.month,
+        );
+        debugPrint('✅ API\'den ${monthlyData.length} günlük veri alındı.');
+
+        // 4. Gelecek kullanımlar için (offline dahil) veritabanına kaydet
+        await localDb.saveMonthlyData(monthlyData);
+
+        // 5. Kaydettiğimiz veritabanından bugünü çek
+        todayData = localDb.getPrayerTimeByDate(todayStr);
+      }
+
+      // Bugüne ait vakitler geldiyse akıllı bildirim algoritmasını kur
+      if (todayData != null) {
+        debugPrint('🔔 Bildirim izinleri isteniyor...');
+        final notifService = ref.read(notificationServiceProvider);
+
+        // ── Sıralı İzin Zinciri (Sequential Permission Chain) ──
+        // Konum izni yukarıda zaten sonuçlandı (getCurrentLocation await ile bitti).
+        // Şimdi bildirim ve hassas alarm izinlerini güvenle isteyebiliriz.
+        // Bu sıralama "Can request only one set of permissions at a time" hatasını önler.
+        try {
+          await notifService.requestAllPermissions();
+          await notifService.schedulePrayerNotifications(todayData);
+          debugPrint('✅ Bildirimler zamanlandı.');
+        } catch (notifError) {
+          // Bildirim kurulumu başarısız olsa bile vakitleri göstermeye devam et
+          debugPrint('⚠️ Bildirim kurulumu başarısız (vakitler etkilenmez): $notifError');
+        }
+      } else {
+        debugPrint('⚠️ Bugüne ait vakit verisi bulunamadı: $todayStr');
+      }
+
+      debugPrint('✅ Vakitler başarıyla yüklendi.');
+      return todayData;
+    } catch (e, stackTrace) {
+      debugPrint('❌ Vakitler yüklenirken hata: $e');
+      debugPrint('📋 StackTrace: $stackTrace');
+      // Hatayı Riverpod'a fırlat → UI'da Error State gösterilsin, sonsuz loading olmasın
+      rethrow;
     }
-
-    // 2. Veri yok, o zaman konumu bulalım (GPS izni yoksa B planı İstanbul gelecek)
-    final coord = await locationService.getCurrentLocation();
-
-    // 3. Bulunan koordinatla API'den o ayın verilerini çek
-    final monthlyData = await apiService.fetchMonthlyPrayerTimes(
-      latitude: coord.latitude,
-      longitude: coord.longitude,
-      year: now.year,
-      month: now.month,
-    );
-
-    // 4. Gelecek kullanımlar için (offline dahil) veritabanına kaydet
-    await localDb.saveMonthlyData(monthlyData);
-
-    // 5. Kaydettiğimiz veritabanından bugünü çekip döndür
-    return localDb.getPrayerTimeByDate(todayStr);
   }
 
   /// Kullanıcı manuel olarak konumu güncelleyip (örneğin ayarlar sayfasından)

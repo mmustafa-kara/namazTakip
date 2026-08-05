@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api_service.dart';
 import 'local_storage_service.dart';
 import 'location_service.dart';
+import 'notification_service.dart';
 import 'qibla_service.dart';
 
 /// Tüm servislerin bağımlılık enjeksiyonunu (Dependency Injection) yöneten Riverpod Provider'ları.
@@ -22,4 +23,8 @@ final locationServiceProvider = Provider<LocationService>((ref) {
 
 final qiblaServiceProvider = Provider<QiblaService>((ref) {
   return QiblaService();
+});
+
+final notificationServiceProvider = Provider<NotificationService>((ref) {
+  return NotificationService();
 });

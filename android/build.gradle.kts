@@ -27,7 +27,19 @@ subprojects {
         project.afterEvaluate {
             project.extensions.findByType<com.android.build.gradle.LibraryExtension>()?.apply {
                 compileSdk = 36
+                // Eklentilerin Java hedefini proje ile eşitle (JVM 17)
+                compileOptions {
+                    sourceCompatibility = JavaVersion.VERSION_17
+                    targetCompatibility = JavaVersion.VERSION_17
+                }
+            }
+            // Eklentilerin Kotlin JVM hedefini de proje ile eşitle (JVM 17)
+            project.tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+                compilerOptions {
+                    jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+                }
             }
         }
     }
 }
+
