@@ -8,11 +8,15 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
-    <!-- Bildirim ve Exact Alarm (Hassas Zamanlanmış Alarm) İzinleri -->
+    <!-- Bildirim ve Exact Alarm İzinleri -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 12 (API 31-32) için kullanıcı onayı gerektiren alarm izni -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Android 13+ (API 33+) için kullanıcı onayı gerektirmeyen sistem alarm izni -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:label="Ezan Vakti Pro"
@@ -50,7 +54,7 @@
         </receiver>
 
         <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
-            android:exported="false"/>
+            android:exported="true"/>
 
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

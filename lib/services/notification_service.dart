@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -17,41 +18,67 @@ void notificationTapBackground(NotificationResponse notificationResponse) {
 }
 
 /// Akıllı Bildirim Servisi (Faz 6).
-/// Namaz vakitleri ve akıllı hatırlatıcı bildirimlerini yönetir.
+///
+/// BENZERSİZ BİLDİRİM ID ŞEMASI (GÖREV 4):
+/// Her vakit için 10'un katları kullanılır:
+///   Sabah (fajr):   Primary=10, Reminder1=11 (Güneş'e 30dk kala)
+///   Öğle  (dhuhr):  Primary=20, Reminder1=21 (45dk sonra)
+///   İkindi(asr):    Primary=30, Reminder1=31 (45dk sonra)
+///   Akşam (maghrib):Primary=40, Reminder1=41 (45dk sonra)
+///   Yatsı (isha):   Primary=50, Reminder1=51 (1s sonra), Reminder2=52 (2s sonra)
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin =
+      FlutterLocalNotificationsPlugin();
 
   static const String actionKildimId = 'ACTION_KILDIM';
   static const String notificationCategoryKey = 'PRAYER_NOTIFICATION_CATEGORY';
 
-  /// Her vakit için tanımlanmış hatırlatıcı bildirim ID'leri
+  // Sadece hatırlatıcıların (reminder) ID'leri — KILDIM bunları iptal eder
   static const Map<String, List<int>> _reminderIds = {
-    'fajr': [101],
-    'dhuhr': [201],
-    'asr': [301],
-    'maghrib': [401],
-    'isha': [501, 502],
+    'fajr':    [11],
+    'dhuhr':   [21],
+    'asr':     [31],
+    'maghrib': [41],
+    'isha':    [51, 52],
   };
 
-  /// Servisi, yerel saat dilimini (TimeZone) ve hassas alarm (Exact Alarm) izinlerini başlatır.
+  bool _initialized = false;
+
+  /// Servisi ve yerel saat dilimini (TimeZone) başlatır.
   Future<void> init() async {
+    if (_initialized) return;
+
     tz.initializeTimeZones();
+
+    // Varsayılan ve zorunlu taban: Türkiye saati
+    String timezoneName = 'Europe/Istanbul';
+
     try {
-      final String timeZoneName = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(timeZoneName));
-    } catch (_) {
-      // Fallback varsayılan saat dilimi
-      tz.setLocalLocation(tz.getLocation('Europe/Istanbul'));
+      final String deviceTimezone = await FlutterTimezone.getLocalTimezone();
+      // Cihaz 'GMT', 'UTC' veya boş dönerse YOK SAY — 3 saatlik kaymayı önler
+      if (deviceTimezone.isNotEmpty &&
+          deviceTimezone != 'GMT' &&
+          deviceTimezone != 'UTC') {
+        timezoneName = deviceTimezone;
+        debugPrint('🕐 Cihaz timezone\'u geçerli: $deviceTimezone');
+      } else {
+        debugPrint('⚠️ Cihaz timezone\'u geçersiz ($deviceTimezone), Europe/Istanbul kullanılıyor.');
+      }
+    } catch (e) {
+      debugPrint('⚠️ Timezone alınamadı, varsayılan kullanılıyor: $e');
     }
 
-    // Android Başlatma Ayarları
+    // Kesin sabitleme — tek bir setLocalLocation çağrısı
+    tz.setLocalLocation(tz.getLocation(timezoneName));
+    debugPrint('🕐 Kilitlenmiş Aktif Timezone: $timezoneName');
+
+    // GÖREV 1: İkon adı kesinlikle '@mipmap/ic_launcher' olmalı — başka isim sessizce bildirimi yutar
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // iOS Başlatma Ayarları (KILDIM Etkileşimli Butonu)
     final darwinInit = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -70,13 +97,8 @@ class NotificationService {
       ],
     );
 
-    final initSettings = InitializationSettings(
-      android: androidInit,
-      iOS: darwinInit,
-    );
-
     await _notificationsPlugin.initialize(
-      initSettings,
+      InitializationSettings(android: androidInit, iOS: darwinInit),
       onDidReceiveNotificationResponse: (response) {
         if (response.actionId == actionKildimId && response.payload != null) {
           cancelPrayerReminders(response.payload!);
@@ -85,61 +107,55 @@ class NotificationService {
       onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
     );
 
-    // Android 12+ (API 31+) cihazlarda Exact Alarm iznini init'te DEĞİL,
-    // konum izni sonuçlandıktan sonra ayrı çağıracağız (izin çakışmasını önlemek için).
+    _initialized = true;
   }
 
-  /// Konum izni sonuçlandıktan SONRA çağrılmalıdır.
-  /// Exact Alarm ve Bildirim izinlerini sıralı olarak ister.
+  /// Konum izni bittikten SONRA çağrılmalıdır — izin çakışmasını önler.
   Future<void> requestAllPermissions() async {
-    final androidImplementation =
-        _notificationsPlugin.resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+    final android = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
 
-    if (androidImplementation != null) {
-      await androidImplementation.requestNotificationsPermission();
-      await androidImplementation.requestExactAlarmsPermission();
+    if (android != null) {
+      await android.requestNotificationsPermission();
+      await android.requestExactAlarmsPermission();
     }
 
-    final iosImplementation =
-        _notificationsPlugin.resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin>();
+    final ios = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
 
-    await iosImplementation?.requestPermissions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    await ios?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
-
-
-
-  /// Namaz vakitlerine göre zamanlanmış bildirimleri ve hatırlatıcıları kurar.
+  /// Namaz vakitlerine göre SADECE GELECEKTEKİ vakitlere bildirim kurar.
+  ///
+  /// GÖREV 2: Her bildirim kurulmadan önce `isAfter(now)` kontrolü yapılır.
+  /// Geçmiş vakitler için hiçbir zonedSchedule çağrısı yapılmaz — hayalet bildirim olmaz.
+  ///
+  /// GÖREV 4: Her bildirim benzersiz ID alır, hiçbiri birbirini ezmez.
   Future<void> schedulePrayerNotifications(PrayerTime prayerTime) async {
     await cancelAllNotifications();
 
     final now = tz.TZDateTime.now(tz.local);
+    debugPrint('⏰ Bildirim zamanlama başlıyor.');
+    debugPrint('   Şu anki TZ zamanı : $now');
+    debugPrint('   Aktif timezone     : ${tz.local.name}');
 
+    /// GÖREV 2: "HH:mm" string'ini güvenli TZDateTime'a çevirir.
+    /// Önce plain DateTime oluşturur, ardından tz.TZDateTime.from() ile
+    /// timezone'a dönüştürür — DST (yaz/kış saati) geçişlerini otomatik yönetir.
     tz.TZDateTime parseTime(String timeStr, {int addMinutes = 0, int addHours = 0}) {
       final parts = timeStr.split(':');
       final hour = int.parse(parts[0]);
       final minute = int.parse(parts[1]);
-
-      var dt = tz.TZDateTime(
-        tz.local,
-        now.year,
-        now.month,
-        now.day,
-        hour,
-        minute,
-      );
-
+      // Adım 1: Saf DateTime (timezone-naive)
+      final plainDt = DateTime(now.year, now.month, now.day, hour, minute);
+      // Adım 2: GÖREV 2 → TZDateTime.from() ile timezone-aware'e dönüştür
+      var tzDt = tz.TZDateTime.from(plainDt, tz.local);
+      // Adım 3: Offset varsa uygula
       if (addMinutes != 0 || addHours != 0) {
-        dt = dt.add(Duration(hours: addHours, minutes: addMinutes));
+        tzDt = tzDt.add(Duration(hours: addHours, minutes: addMinutes));
       }
-
-      return dt;
+      return tzDt;
     }
 
     final androidDetails = AndroidNotificationDetails(
@@ -148,177 +164,110 @@ class NotificationService {
       channelDescription: 'Ezan vakitleri ve akıllı namaz hatırlatıcı bildirimleri',
       importance: Importance.max,
       priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
       actions: const [
-        AndroidNotificationAction(
-          actionKildimId,
-          'KILDIM',
-          showsUserInterface: true,
-        ),
+        AndroidNotificationAction(actionKildimId, 'KILDIM', showsUserInterface: true),
       ],
     );
 
     const iosDetails = DarwinNotificationDetails(
       categoryIdentifier: notificationCategoryKey,
+      interruptionLevel: InterruptionLevel.critical,
     );
 
-    final notificationDetails = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
+    final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
 
-    // 1. ÖĞLE (Dhuhr): Vakit (ID 200) + 45dk Hatırlatıcı (ID 201)
-    final dhuhrTime = parseTime(prayerTime.dhuhr);
-    if (dhuhrTime.isAfter(now)) {
+    int scheduled = 0;
+
+    // ── Yardımcı: GÖREV 3+4 → Geçmişse atla, gelecekteyse logla ve zamanla ──
+    Future<void> schedule(int id, String title, String body, tz.TZDateTime when,
+        {String? payload}) async {
+      // GÖREV 3: Sıkı geçmiş zaman kontrolü
+      if (when.isBefore(tz.TZDateTime.now(tz.local))) {
+        debugPrint('  ⏭️ [ID:$id] "$title" → $when (geçmiş, atlandı)');
+        return;
+      }
+      // GÖREV 4: zonedSchedule çağrısından ÖNCE tam zamanı logla
+      debugPrint('  🔔 Bildirim Kuruluyor: ID $id, Zaman: $when');
       await _notificationsPlugin.zonedSchedule(
-        200,
-        'Öğle Vakti Girdi',
-        'Öğle namazı vakti girdi. Haydi namaza!',
-        dhuhrTime,
-        notificationDetails,
+        id,
+        title,
+        body,
+        when,
+        details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'dhuhr',
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: payload,
       );
+      scheduled++;
+      debugPrint('  ✅ [ID:$id] başarıyla zamanlandı.');
     }
+    // ─────────────────────────────────────────────────────────────────────────
 
-    final dhuhrReminder = parseTime(prayerTime.dhuhr, addMinutes: 45);
-    if (dhuhrReminder.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        201,
-        'Öğle Namazı Hatırlatıcısı',
-        'Öğle vaktinin çıkmasına az kaldı, namazınızı kıldınız mı?',
-        dhuhrReminder,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'dhuhr',
-      );
-    }
-
-    // 2. İKİNDİ (Asr): Vakit (ID 300) + 45dk Hatırlatıcı (ID 301)
-    final asrTime = parseTime(prayerTime.asr);
-    if (asrTime.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        300,
-        'İkindi Vakti Girdi',
-        'İkindi namazı vakti girdi. Haydi namaza!',
-        asrTime,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'asr',
-      );
-    }
-
-    final asrReminder = parseTime(prayerTime.asr, addMinutes: 45);
-    if (asrReminder.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        301,
-        'İkindi Namazı Hatırlatıcısı',
-        'İkindi vaktinin çıkmasına az kaldı, namazınızı kıldınız mı?',
-        asrReminder,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'asr',
-      );
-    }
-
-    // 3. AKŞAM (Maghrib): Vakit (ID 400) + 45dk Hatırlatıcı (ID 401)
-    final maghribTime = parseTime(prayerTime.maghrib);
-    if (maghribTime.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        400,
-        'Akşam Vakti Girdi',
-        'Akşam namazı vakti girdi. Haydi namaza!',
-        maghribTime,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'maghrib',
-      );
-    }
-
-    final maghribReminder = parseTime(prayerTime.maghrib, addMinutes: 45);
-    if (maghribReminder.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        401,
-        'Akşam Namazı Hatırlatıcısı',
-        'Akşam vaktinin çıkmasına az kaldı, namazınızı kıldınız mı?',
-        maghribReminder,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'maghrib',
-      );
-    }
-
-    // 4. YATSI (Isha): Vakit (ID 500) + 1.saat Hatırlatıcı (ID 501) + 2.saat Hatırlatıcı (ID 502)
-    final ishaTime = parseTime(prayerTime.isha);
-    if (ishaTime.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        500,
-        'Yatsı Vakti Girdi',
-        'Yatsı namazı vakti girdi. Haydi namaza!',
-        ishaTime,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'isha',
-      );
-    }
-
-    final ishaReminder1 = parseTime(prayerTime.isha, addHours: 1);
-    if (ishaReminder1.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        501,
-        'Yatsı Namazı Hatırlatıcısı',
-        'Yatsı namazını eda etmeyi unutmayın.',
-        ishaReminder1,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'isha',
-      );
-    }
-
-    final ishaReminder2 = parseTime(prayerTime.isha, addHours: 2);
-    if (ishaReminder2.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        502,
-        'Yatsı Namazı Son Hatırlatma',
-        'Gece istirahatine çekilmeden önce yatsı namazınızı kıldınız mı?',
-        ishaReminder2,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'isha',
-      );
-    }
-
-    // 5. SABAH (Fajr / Sunrise): Güneş'e 30dk kala Daralan Vakit Uyarısı (ID 101)
-    final sunriseTime = parseTime(prayerTime.sunrise, addMinutes: -30);
-    if (sunriseTime.isAfter(now)) {
-      await _notificationsPlugin.zonedSchedule(
-        101,
-        'Sabah Namazı - Daralan Vakit',
+    // 1. SABAH (Fajr): Güneş'e 30dk kala uyarı (ID:11)
+    //    Not: Sabah'ın tam vakti için primary bildirim yok (imsak bildirimi değil,
+    //    sadece "daralan vakit" uyarısı istenmişti).
+    await schedule(11, 'Sabah Namazı - Daralan Vakit',
         'Güneşin doğuşuna 30 dakika kaldı! Sabah namazını eda etmeyi unutmayın.',
-        sunriseTime,
-        notificationDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        payload: 'fajr',
-      );
-    }
+        parseTime(prayerTime.sunrise, addMinutes: -30),
+        payload: 'fajr');
+
+    // 2. ÖĞLE (Dhuhr): Vakit (ID:20) + 45dk Hatırlatıcı (ID:21)
+    await schedule(20, 'Öğle Vakti Girdi',
+        'Öğle namazı vakti girdi. Haydi namaza!',
+        parseTime(prayerTime.dhuhr),
+        payload: 'dhuhr');
+    await schedule(21, 'Öğle Namazı Hatırlatıcısı',
+        'Öğle vaktinin çıkmasına az kaldı, namazınızı kıldınız mı?',
+        parseTime(prayerTime.dhuhr, addMinutes: 45),
+        payload: 'dhuhr');
+
+    // 3. İKİNDİ (Asr): Vakit (ID:30) + 45dk Hatırlatıcı (ID:31)
+    await schedule(30, 'İkindi Vakti Girdi',
+        'İkindi namazı vakti girdi. Haydi namaza!',
+        parseTime(prayerTime.asr),
+        payload: 'asr');
+    await schedule(31, 'İkindi Namazı Hatırlatıcısı',
+        'İkindi vaktinin çıkmasına az kaldı, namazınızı kıldınız mı?',
+        parseTime(prayerTime.asr, addMinutes: 45),
+        payload: 'asr');
+
+    // 4. AKŞAM (Maghrib): Vakit (ID:40) + 45dk Hatırlatıcı (ID:41)
+    await schedule(40, 'Akşam Vakti Girdi',
+        'Akşam namazı vakti girdi. Haydi namaza!',
+        parseTime(prayerTime.maghrib),
+        payload: 'maghrib');
+    await schedule(41, 'Akşam Namazı Hatırlatıcısı',
+        'Akşam vaktinin çıkmasına az kaldı, namazınızı kıldınız mı?',
+        parseTime(prayerTime.maghrib, addMinutes: 45),
+        payload: 'maghrib');
+
+    // 5. YATSI (Isha): Vakit (ID:50) + 1s Hatırlatıcı (ID:51) + 2s Hatırlatıcı (ID:52)
+    await schedule(50, 'Yatsı Vakti Girdi',
+        'Yatsı namazı vakti girdi. Haydi namaza!',
+        parseTime(prayerTime.isha),
+        payload: 'isha');
+    await schedule(51, 'Yatsı Namazı Hatırlatıcısı',
+        'Yatsı namazını eda etmeyi unutmayın.',
+        parseTime(prayerTime.isha, addHours: 1),
+        payload: 'isha');
+    await schedule(52, 'Yatsı Namazı Son Hatırlatma',
+        'Gece istirahatine çekilmeden önce yatsı namazınızı kıldınız mı?',
+        parseTime(prayerTime.isha, addHours: 2),
+        payload: 'isha');
+
+    debugPrint('🔔 Toplam $scheduled bildirim zamanlandı.');
   }
 
-  /// Kullanıcı "KILDIM" butonuna bastığında çağrılır.
-  /// O vakte ait bekleyen (pending) hatırlatıcı bildirimlerini iptal eder.
+  /// Kullanıcı "KILDIM" butonuna bastığında o vakte ait hatırlatıcıları iptal eder.
   Future<void> cancelPrayerReminders(String prayerTag) async {
     final idsToCancel = _reminderIds[prayerTag];
     if (idsToCancel != null) {
       for (final id in idsToCancel) {
         await _notificationsPlugin.cancel(id);
+        debugPrint('🚫 Bildirim iptal edildi: ID=$id ($prayerTag)');
       }
     }
   }
@@ -326,5 +275,31 @@ class NotificationService {
   /// Tüm zamanlanmış bildirimleri iptal eder.
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
+  }
+
+  /// GÖREV 3: Anında test bildirimi — zonedSchedule kullanmaz, direkt show() ile.
+  /// Bildirim altyapısının çalışıp çalışmadığını izole etmek için kullan.
+  Future<void> showTestNotification() async {
+    final androidDetails = AndroidNotificationDetails(
+      'prayer_times_channel',
+      'Namaz Vakitleri & Hatırlatıcılar',
+      channelDescription: 'Ezan vakitleri ve akıllı namaz hatırlatıcı bildirimleri',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      interruptionLevel: InterruptionLevel.critical,
+    );
+
+    await _notificationsPlugin.show(
+      999,
+      '🔔 Bildirim Testi',
+      'Bu bildirim altyapısının çalıştığını doğrular. Bildirimleri aldıysanız sistem hazır!',
+      NotificationDetails(android: androidDetails, iOS: iosDetails),
+    );
+    debugPrint('🔔 Test bildirimi gönderildi (ID:999)');
   }
 }

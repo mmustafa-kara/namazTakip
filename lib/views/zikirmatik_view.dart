@@ -109,16 +109,19 @@ class ZikirmatikView extends ConsumerWidget {
                       // Devasa İnteraktif Zikir Butonu (Flat Premium)
                       GestureDetector(
                         onTap: () {
-                          // Sayıyı artır
-                          ref.read(zikirCountProvider.notifier).increment();
+                          // count: Riverpod'dan gelen MEVCUT (artırılmadan önceki) değer.
+                          // newCount: artırıldıktan sonraki değer.
                           final newCount = count + 1;
 
-                          // Her 33 ve 99 adımlarında güçlü, diğerlerinde hafif dokunsal geribildirim
-                          if (newCount % 33 == 0 || newCount % 99 == 0) {
+                          // Haptic'i ÖNCE çağır (async increment'ten önce) — race condition yok
+                          if (newCount % 33 == 0) {
                             HapticFeedback.heavyImpact();
                           } else {
                             HapticFeedback.lightImpact();
                           }
+
+                          // Ardından state'i artır ve kaydet
+                          ref.read(zikirCountProvider.notifier).increment();
                         },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 150),

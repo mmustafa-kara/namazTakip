@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/theme.dart';
+import '../services/notification_service.dart';
 import '../viewmodels/prayer_times_viewmodel.dart';
 import '../viewmodels/settings_viewmodel.dart';
 
@@ -208,6 +209,66 @@ class SettingsView extends ConsumerWidget {
                               ),
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // ── GELİŞTİRİCİ / HATA AYIKLAMA ──────────────────────────
+                    _SectionHeader(title: 'HATA AYIKLAMA', color: textHint),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: surface,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: divider, width: 1),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            title: Text(
+                              'Bildirim Testi (Anında)',
+                              style: AppTypography.headlineSmall(color: accent).copyWith(fontSize: 14),
+                            ),
+                            subtitle: Text(
+                              'Altyapının çalıştığını test eder — anında bildirim gösterir',
+                              style: AppTypography.bodySmall(color: textSecondary),
+                            ),
+                            trailing: Icon(Icons.notifications_active_rounded, color: accent, size: 20),
+                            onTap: () async {
+                              HapticFeedback.mediumImpact();
+                              try {
+                                await NotificationService().showTestNotification();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: surface2,
+                                      content: Text(
+                                        'Test bildirimi gönderildi! Bildirim geldiyse sistem çalışıyor.',
+                                        style: AppTypography.bodySmall(color: textPrimary),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: surface2,
+                                      content: Text(
+                                        'Bildirim hatası: $e',
+                                        style: AppTypography.bodySmall(color: textPrimary),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
                         ),
                       ),
                     ),
