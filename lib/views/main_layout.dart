@@ -44,8 +44,9 @@ class _MainLayoutState extends State<MainLayout> {
         index: _currentIndex,
         children: _pages,
       ),
-      // Flat Premium Alt Menü
+      // GÖREV 1: Flat Premium Ferah & Tam Responsive Alt Menü
       bottomNavigationBar: Container(
+        height: 84, // Yükseklik 84px olarak artırıldı (ferah görünüm)
         decoration: BoxDecoration(
           color: surface,
           border: Border(
@@ -56,81 +57,66 @@ class _MainLayoutState extends State<MainLayout> {
           ),
         ),
         child: SafeArea(
-          top: false,
+          top: false, // Üst kısmı pas geç, alt home indicator alanını koru
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _NavItem(
-                  icon: Icons.access_time_rounded,
-                  activeIcon: Icons.access_time_filled_rounded,
-                  label: 'Vakitler',
-                  isSelected: _currentIndex == 0,
-                  accentColor: accent,
-                  unselectedColor: textHint,
-                  onTap: () {
-                    if (_currentIndex != 0) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _currentIndex = 0);
-                    }
-                  },
+                // GÖREV 1: 5 Butonun HER BİRİ KESİNLİKLE Expanded ile sarmalandı
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.access_time_rounded,
+                    activeIcon: Icons.access_time_filled_rounded,
+                    label: 'Vakitler',
+                    isSelected: _currentIndex == 0,
+                    accentColor: accent,
+                    unselectedColor: textHint,
+                    onTap: () => _onTabChanged(0),
+                  ),
                 ),
-                _NavItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore_rounded,
-                  label: 'Kıble',
-                  isSelected: _currentIndex == 1,
-                  accentColor: accent,
-                  unselectedColor: textHint,
-                  onTap: () {
-                    if (_currentIndex != 1) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _currentIndex = 1);
-                    }
-                  },
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.explore_outlined,
+                    activeIcon: Icons.explore_rounded,
+                    label: 'Kıble',
+                    isSelected: _currentIndex == 1,
+                    accentColor: accent,
+                    unselectedColor: textHint,
+                    onTap: () => _onTabChanged(1),
+                  ),
                 ),
-                _NavItem(
-                  icon: Icons.touch_app_outlined,
-                  activeIcon: Icons.touch_app_rounded,
-                  label: 'Zikir',
-                  isSelected: _currentIndex == 2,
-                  accentColor: accent,
-                  unselectedColor: textHint,
-                  onTap: () {
-                    if (_currentIndex != 2) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _currentIndex = 2);
-                    }
-                  },
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.touch_app_outlined,
+                    activeIcon: Icons.touch_app_rounded,
+                    label: 'Zikir',
+                    isSelected: _currentIndex == 2,
+                    accentColor: accent,
+                    unselectedColor: textHint,
+                    onTap: () => _onTabChanged(2),
+                  ),
                 ),
-                _NavItem(
-                  icon: Icons.assignment_outlined,
-                  activeIcon: Icons.assignment_rounded,
-                  label: 'Kaza',
-                  isSelected: _currentIndex == 3,
-                  accentColor: accent,
-                  unselectedColor: textHint,
-                  onTap: () {
-                    if (_currentIndex != 3) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _currentIndex = 3);
-                    }
-                  },
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.assignment_outlined,
+                    activeIcon: Icons.assignment_rounded,
+                    label: 'Kaza',
+                    isSelected: _currentIndex == 3,
+                    accentColor: accent,
+                    unselectedColor: textHint,
+                    onTap: () => _onTabChanged(3),
+                  ),
                 ),
-                _NavItem(
-                  icon: Icons.settings_outlined,
-                  activeIcon: Icons.settings_rounded,
-                  label: 'Ayarlar',
-                  isSelected: _currentIndex == 4,
-                  accentColor: accent,
-                  unselectedColor: textHint,
-                  onTap: () {
-                    if (_currentIndex != 4) {
-                      HapticFeedback.selectionClick();
-                      setState(() => _currentIndex = 4);
-                    }
-                  },
+                Expanded(
+                  child: _NavItem(
+                    icon: Icons.settings_outlined,
+                    activeIcon: Icons.settings_rounded,
+                    label: 'Ayarlar',
+                    isSelected: _currentIndex == 4,
+                    accentColor: accent,
+                    unselectedColor: textHint,
+                    onTap: () => _onTabChanged(4),
+                  ),
                 ),
               ],
             ),
@@ -139,9 +125,16 @@ class _MainLayoutState extends State<MainLayout> {
       ),
     );
   }
+
+  void _onTabChanged(int index) {
+    if (_currentIndex != index) {
+      HapticFeedback.selectionClick();
+      setState(() => _currentIndex = index);
+    }
+  }
 }
 
-/// Özel Flat Premium Navigasyon Elemanı
+/// Özel Flat Premium Navigasyon Elemanı (Responsive, Taşımasız Yapı)
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final IconData activeIcon;
@@ -168,29 +161,38 @@ class _NavItem extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? accentColor.withValues(alpha: 0.12) : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: color,
-              size: 20,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: isSelected
-                  ? AppTypography.labelMedium(color: color)
-                  : AppTypography.labelSmall(color: color),
-            ),
-          ],
+      child: Center(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? accentColor.withValues(alpha: 0.12) : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isSelected ? activeIcon : icon,
+                color: color,
+                size: 22,
+              ),
+              const SizedBox(height: 3),
+              // GÖREV 1: Metinlerin taşmaması için FittedBox ve ellipsis kullanımı
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: isSelected
+                      ? AppTypography.labelMedium(color: color).copyWith(fontSize: 11)
+                      : AppTypography.labelSmall(color: color).copyWith(fontSize: 10),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

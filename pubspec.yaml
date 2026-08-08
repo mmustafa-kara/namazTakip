@@ -66,9 +66,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # assets:
-  #   - assets/images/
-  #   - assets/lottie/
+  assets:
+    - assets/data/turkiye_il_ilce.json
 
   # fonts:
   #   - family: Outfit

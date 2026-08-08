@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/theme.dart';
 import '../models/prayer_time.dart';
+import '../services/service_providers.dart';
 import '../utils/prayer_schedule_helper.dart';
 import '../viewmodels/prayer_times_viewmodel.dart';
 import '../widgets/countdown_timer_widget.dart';
@@ -237,7 +238,7 @@ class _HomeContent extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // HERO SECTION  (Tarih + Countdown)
 // ─────────────────────────────────────────────────────────────────────────────
-class _HeroSection extends StatelessWidget {
+class _HeroSection extends ConsumerWidget {
   final String dateString;
   final String nextPrayerName;
   final DateTime nextPrayerTime;
@@ -249,7 +250,7 @@ class _HeroSection extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = isDark ? AppColors.darkAccentPrimary : AppColors.lightAccentPrimary;
     final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
@@ -307,25 +308,34 @@ class _HeroSection extends StatelessWidget {
           Container(height: 1, color: divider),
           const SizedBox(height: 20),
 
-          // Accent badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.location_on_rounded, size: 14, color: accent),
-                const SizedBox(width: 6),
-                Text(
-                  'Konumunuza göre',
-                  style: AppTypography.labelSmall(color: accent),
+          // Accent location badge — Dinamik Konum Gösterimi
+          FutureBuilder(
+            future: ref.read(locationServiceProvider).getCustomLocation(),
+            builder: (context, snapshot) {
+              final locText = snapshot.data != null
+                  ? snapshot.data!.name
+                  : 'Otomatik Konum (GPS)';
+
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.location_on_rounded, size: 14, color: accent),
+                    const SizedBox(width: 6),
+                    Text(
+                      locText,
+                      style: AppTypography.labelSmall(color: accent),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),
