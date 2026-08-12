@@ -76,8 +76,8 @@ class NotificationService {
     tz.setLocalLocation(tz.getLocation(timezoneName));
     debugPrint('🕐 Kilitlenmiş Aktif Timezone: $timezoneName');
 
-    // GÖREV 1: İkon adı kesinlikle '@mipmap/ic_launcher' olmalı — başka isim sessizce bildirimi yutar
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // GÖREV 2: Renkli ikonların beyaz kare olmasını önleyen transparan bildirim ikonu
+    const androidInit = AndroidInitializationSettings('@drawable/ic_notification');
 
     final darwinInit = DarwinInitializationSettings(
       requestAlertPermission: false,
@@ -162,6 +162,7 @@ class NotificationService {
       'prayer_times_channel',
       'Namaz Vakitleri & Hatırlatıcılar',
       channelDescription: 'Ezan vakitleri ve akıllı namaz hatırlatıcı bildirimleri',
+      icon: '@drawable/ic_notification',
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
@@ -180,15 +181,16 @@ class NotificationService {
 
     int scheduled = 0;
 
-    // ── Yardımcı: GÖREV 3+4 → Geçmişse atla, gelecekteyse logla ve zamanla ──
+    // ── Yardımcı: GÖREV 3 → Geçmişse/şu ansa atla, gelecekteyse logla ve zamanla ──
     Future<void> schedule(int id, String title, String body, tz.TZDateTime when,
         {String? payload}) async {
-      // GÖREV 3: Sıkı geçmiş zaman kontrolü
-      if (when.isBefore(tz.TZDateTime.now(tz.local))) {
-        debugPrint('  ⏭️ [ID:$id] "$title" → $when (geçmiş, atlandı)');
+      final now = tz.TZDateTime.now(tz.local);
+      // GÖREV 3: Geçmiş veya tam şu anki vakit filtresi — geçmiş bildirim ekrana DÜŞMEZ
+      if (when.isBefore(now) || when.isAtSameMomentAs(now)) {
+        debugPrint('  ⏭️ [ID:$id] "$title" → $when (geçmiş/şu anki vakit, atlandı)');
         return;
       }
-      // GÖREV 4: zonedSchedule çağrısından ÖNCE tam zamanı logla
+      // Gelecekteki bildirim kuruluyor
       debugPrint('  🔔 Bildirim Kuruluyor: ID $id, Zaman: $when');
       await _notificationsPlugin.zonedSchedule(
         id,
@@ -277,6 +279,44 @@ class NotificationService {
     await _notificationsPlugin.cancelAll();
   }
 
+  /// GÖREV 1: Zaman Makinesi (Hızlı Test) Fonksiyonu.
+  /// 1. Tüm eski bildirimleri temizler.
+  /// 2. Tam 15 saniye sonrasına zonedSchedule ile test bildirimi kurar.
+  Future<void> scheduleQuickTestNotification() async {
+    await cancelAllNotifications();
+
+    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 15));
+    debugPrint('⏰ Hızlı Test Bildirimi Kuruluyor (15 sn sonra): $scheduledTime');
+
+    final androidDetails = AndroidNotificationDetails(
+      'prayer_times_channel',
+      'Namaz Vakitleri & Hatırlatıcılar',
+      channelDescription: 'Ezan vakitleri ve akıllı namaz hatırlatıcı bildirimleri',
+      icon: '@drawable/ic_notification',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+    );
+
+    const iosDetails = DarwinNotificationDetails(
+      interruptionLevel: InterruptionLevel.critical,
+    );
+
+    await _notificationsPlugin.zonedSchedule(
+      999,
+      '🔔 Test Vakti Girdi',
+      '15 saniyelik zaman makinesi testi başarıyla çalıştı! Zamanlanmış alarmlar aktif.',
+      scheduledTime,
+      NotificationDetails(android: androidDetails, iOS: iosDetails),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+    );
+
+    debugPrint('✅ [ID:999] Hızlı test bildirimi 15 sn sonrasına kuruldu.');
+  }
+
   /// GÖREV 3: Anında test bildirimi — zonedSchedule kullanmaz, direkt show() ile.
   /// Bildirim altyapısının çalışıp çalışmadığını izole etmek için kullan.
   Future<void> showTestNotification() async {
@@ -284,6 +324,7 @@ class NotificationService {
       'prayer_times_channel',
       'Namaz Vakitleri & Hatırlatıcılar',
       channelDescription: 'Ezan vakitleri ve akıllı namaz hatırlatıcı bildirimleri',
+      icon: '@drawable/ic_notification',
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,

@@ -7,7 +7,7 @@ import '../viewmodels/zikir_viewmodel.dart';
 
 /// Zikirmatik Ekranı (Faz 7).
 /// AGENTS.md: ConsumerWidget, Flat Premium stil, <200 satır view sınırı.
-/// OPTIMIZATIONS.md: Tıklamalar esnasında tüm sayfanın yeniden çizilmesini 
+/// OPTIMIZATIONS.md: Tıklamalar esnasında tüm sayfanın yeniden çizilmesini
 /// önlemek için sayaç değişimi lokal [Consumer] içerisinde izole edilir.
 class ZikirmatikView extends ConsumerWidget {
   const ZikirmatikView({super.key});
@@ -15,9 +15,15 @@ class ZikirmatikView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = isDark ? AppColors.darkAccentPrimary : AppColors.lightAccentPrimary;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final accent = isDark
+        ? AppColors.darkAccentPrimary
+        : AppColors.lightAccentPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final textHint = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
     final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final surface2 = isDark ? AppColors.darkSurface2 : AppColors.lightSurface2;
@@ -56,7 +62,10 @@ class ZikirmatikView extends ConsumerWidget {
                       ref.read(zikirCountProvider.notifier).reset();
                     },
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         color: surface2,
                         borderRadius: BorderRadius.circular(16),
@@ -65,11 +74,17 @@ class ZikirmatikView extends ConsumerWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.refresh_rounded, size: 16, color: textSecondary),
+                          Icon(
+                            Icons.refresh_rounded,
+                            size: 16,
+                            color: textSecondary,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Sıfırla',
-                            style: AppTypography.labelMedium(color: textSecondary),
+                            style: AppTypography.labelMedium(
+                              color: textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -92,11 +107,17 @@ class ZikirmatikView extends ConsumerWidget {
                     children: [
                       // Tur ve Döngü Bilgisi
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: accent.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
+                          border: Border.all(
+                            color: accent.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
                         ),
                         child: Text(
                           '$totalCycles Tur  •  $cycleProgress / 33',
@@ -150,7 +171,9 @@ class ZikirmatikView extends ConsumerWidget {
                                 const SizedBox(height: 8),
                                 Text(
                                   'DOKUN',
-                                  style: AppTypography.overline(color: textHint),
+                                  style: AppTypography.overline(
+                                    color: textHint,
+                                  ),
                                 ),
                               ],
                             ),
@@ -163,14 +186,6 @@ class ZikirmatikView extends ConsumerWidget {
               ),
 
               const Spacer(),
-
-              // Alt Bilgi Notu
-              Text(
-                'Her 33 zikirde bir güçlü titreşim uyarısı verilir.',
-                style: AppTypography.bodySmall(color: textHint),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
             ],
           ),
         ),

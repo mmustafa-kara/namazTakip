@@ -23,9 +23,15 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = isDark ? AppColors.darkAccentPrimary : AppColors.lightAccentPrimary;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final accent = isDark
+        ? AppColors.darkAccentPrimary
+        : AppColors.lightAccentPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final textHint = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
     final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final surface2 = isDark ? AppColors.darkSurface2 : AppColors.lightSurface2;
@@ -68,7 +74,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
                         child: FutureBuilder(
-                          future: ref.read(locationServiceProvider).getCustomLocation(),
+                          future: ref
+                              .read(locationServiceProvider)
+                              .getCustomLocation(),
                           builder: (context, snapshot) {
                             final customLoc = snapshot.data;
                             final isCustom = customLoc != null;
@@ -80,16 +88,20 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                               color: Colors.transparent,
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 4),
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
                                 title: Text(
-                                  'Konum Seçimi (81 İl / 922 İlçe)',
-                                  style: AppTypography.headlineSmall(color: textPrimary)
-                                      .copyWith(fontSize: 14),
+                                  'Manuel Konum Seçimi',
+                                  style: AppTypography.headlineSmall(
+                                    color: textPrimary,
+                                  ).copyWith(fontSize: 14),
                                 ),
                                 subtitle: Text(
                                   locationText,
                                   style: AppTypography.bodySmall(
-                                      color: isCustom ? accent : textSecondary),
+                                    color: isCustom ? accent : textSecondary,
+                                  ),
                                 ),
                                 trailing: Icon(
                                   isCustom
@@ -152,7 +164,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                             Divider(height: 1, color: divider),
                             _ThemeTile(
                               title: 'Sistem Teması',
-                              isSelected: settings.themeMode == ThemeMode.system,
+                              isSelected:
+                                  settings.themeMode == ThemeMode.system,
                               onTap: () {
                                 HapticFeedback.selectionClick();
                                 ref
@@ -171,7 +184,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
                     // ── BİLDİRİMLER KATEGORİSİ ──────────────────────────────
                     _SectionHeader(
-                        title: 'BİLDİRİMLER VE ALGORİTMA', color: textHint),
+                      title: 'BİLDİRİMLER VE ALGORİTMA',
+                      color: textHint,
+                    ),
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
@@ -186,7 +201,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                             _NotifTypeTile(
                               title: 'Akıllı Hatırlatıcılar (Önerilen)',
                               subtitle:
-                                  'Vakitlerde + 45dk/1s aralıklarla akıllı bildirimler',
+                                  'Namazlarınız için hatırlatma bildirimleri gönderir',
                               isSelected:
                                   settings.notificationType == 'hatirlatici',
                               onTap: () {
@@ -202,7 +217,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                             Divider(height: 1, color: divider),
                             _NotifTypeTile(
                               title: 'Sadece Vakit Bildirimi',
-                              subtitle: 'Yalnızca vakit girdiğinde tek 1 bildirim',
+                              subtitle:
+                                  'Yalnızca vakit girdiğinde tek 1 bildirim',
                               isSelected: settings.notificationType == 'vakit',
                               onTap: () {
                                 HapticFeedback.selectionClick();
@@ -223,7 +239,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
                     // ── SİSTEM VE ETKİLEŞİM KATEGORİSİ ───────────────────────
                     _SectionHeader(
-                        title: 'SİSTEM VE ETKİLEŞİM', color: textHint),
+                      title: 'SİSTEM VE ETKİLEŞİM',
+                      color: textHint,
+                    ),
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
@@ -237,7 +255,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 12),
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                               child: Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
@@ -245,8 +265,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                                   Text(
                                     'Dokunsal Titreşim (Haptic)',
                                     style: AppTypography.headlineSmall(
-                                            color: textPrimary)
-                                        .copyWith(fontSize: 14),
+                                      color: textPrimary,
+                                    ).copyWith(fontSize: 14),
                                   ),
                                   CupertinoSwitch(
                                     activeTrackColor: accent,
@@ -266,20 +286,26 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                               color: Colors.transparent,
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 4),
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
                                 title: Text(
                                   'Konum ve Vakitleri Yenile',
                                   style: AppTypography.headlineSmall(
-                                          color: textPrimary)
-                                      .copyWith(fontSize: 14),
+                                    color: textPrimary,
+                                  ).copyWith(fontSize: 14),
                                 ),
                                 subtitle: Text(
-                                  'Aylık takvimi yeniden çeker ve yeniler',
-                                  style:
-                                      AppTypography.bodySmall(color: textSecondary),
+                                  'Namaz vakitlerini ve konum bilginizi günceller',
+                                  style: AppTypography.bodySmall(
+                                    color: textSecondary,
+                                  ),
                                 ),
-                                trailing: Icon(Icons.refresh_rounded,
-                                    color: accent, size: 20),
+                                trailing: Icon(
+                                  Icons.refresh_rounded,
+                                  color: accent,
+                                  size: 20,
+                                ),
                                 onTap: () {
                                   HapticFeedback.mediumImpact();
                                   ref
@@ -291,7 +317,8 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                                       content: Text(
                                         'Konum ve vakitler güncelleniyor...',
                                         style: AppTypography.bodySmall(
-                                            color: textPrimary),
+                                          color: textPrimary,
+                                        ),
                                       ),
                                     ),
                                   );
@@ -316,56 +343,140 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
-                            title: Text(
-                              'Bildirim Testi (Anında)',
-                              style: AppTypography.headlineSmall(color: accent)
-                                  .copyWith(fontSize: 14),
+                        child: Column(
+                          children: [
+                            // GÖREV 2: 15 Saniye Sonra Zamanlanmış Bildirim Test Butonu
+                            Material(
+                              color: Colors.transparent,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                                title: Text(
+                                  '15 Saniye Sonra Bildirim Test Et',
+                                  style: AppTypography.headlineSmall(
+                                    color: accent,
+                                  ).copyWith(fontSize: 14),
+                                ),
+                                subtitle: Text(
+                                  'Zamanlanmış bildirim testi (zonedSchedule) — 15 sn sonra çalar',
+                                  style: AppTypography.bodySmall(
+                                    color: textSecondary,
+                                  ),
+                                ),
+                                trailing: Icon(
+                                  Icons.timer_rounded,
+                                  color: accent,
+                                  size: 20,
+                                ),
+                                onTap: () async {
+                                  HapticFeedback.mediumImpact();
+                                  try {
+                                    await NotificationService()
+                                        .scheduleQuickTestNotification();
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: surface2,
+                                          content: Text(
+                                            'Bildirim 15 sn sonra gelecek, uygulamayı arka plana alıp bekleyin',
+                                            style: AppTypography.bodySmall(
+                                              color: textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: surface2,
+                                          content: Text(
+                                            'Test hatası: $e',
+                                            style: AppTypography.bodySmall(
+                                              color: textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
                             ),
-                            subtitle: Text(
-                              'Altyapının çalıştığını test eder — anında bildirim gösterir',
-                              style: AppTypography.bodySmall(
-                                  color: textSecondary),
+                            Divider(height: 1, color: divider),
+                            // Anında Test Bildirimi
+                            Material(
+                              color: Colors.transparent,
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                                title: Text(
+                                  'Anında Bildirim Testi',
+                                  style: AppTypography.headlineSmall(
+                                    color: textPrimary,
+                                  ).copyWith(fontSize: 14),
+                                ),
+                                subtitle: Text(
+                                  'Altyapının çalıştığını test eder — anında bildirim gösterir',
+                                  style: AppTypography.bodySmall(
+                                    color: textSecondary,
+                                  ),
+                                ),
+                                trailing: Icon(
+                                  Icons.notifications_active_rounded,
+                                  color: textSecondary,
+                                  size: 20,
+                                ),
+                                onTap: () async {
+                                  HapticFeedback.mediumImpact();
+                                  try {
+                                    await NotificationService()
+                                        .showTestNotification();
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: surface2,
+                                          content: Text(
+                                            'Test bildirimi gönderildi! Bildirim geldiyse sistem çalışıyor.',
+                                            style: AppTypography.bodySmall(
+                                              color: textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          backgroundColor: surface2,
+                                          content: Text(
+                                            'Bildirim hatası: $e',
+                                            style: AppTypography.bodySmall(
+                                              color: textPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
                             ),
-                            trailing: Icon(Icons.notifications_active_rounded,
-                                color: accent, size: 20),
-                            onTap: () async {
-                              HapticFeedback.mediumImpact();
-                              try {
-                                await NotificationService()
-                                    .showTestNotification();
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: surface2,
-                                      content: Text(
-                                        'Test bildirimi gönderildi! Bildirim geldiyse sistem çalışıyor.',
-                                        style: AppTypography.bodySmall(
-                                            color: textPrimary),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      backgroundColor: surface2,
-                                      content: Text(
-                                        'Bildirim hatası: $e',
-                                        style: AppTypography.bodySmall(
-                                            color: textPrimary),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                          ),
+                          ],
                         ),
                       ),
                     ),
@@ -383,9 +494,15 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
   /// GÖREV: 81 İl ve 922 İlçeli Eksiksiz Konum Seçim Modal BottomSheet'i
   void _showLocationPickerDialog(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = isDark ? AppColors.darkAccentPrimary : AppColors.lightAccentPrimary;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final accent = isDark
+        ? AppColors.darkAccentPrimary
+        : AppColors.lightAccentPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final surface2 = isDark ? AppColors.darkSurface2 : AppColors.lightSurface2;
     final divider = isDark ? AppColors.darkDivider : AppColors.lightDivider;
@@ -404,9 +521,7 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return Padding(
                 padding: const EdgeInsets.all(32),
-                child: Center(
-                  child: CircularProgressIndicator(color: accent),
-                ),
+                child: Center(child: CircularProgressIndicator(color: accent)),
               );
             }
 
@@ -417,10 +532,11 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
               orElse: () => provinces.first,
             );
 
-            DistrictModel selectedDistrict = selectedProvince.districts.firstWhere(
-              (d) => d.name.toUpperCase() == 'İNEGÖL',
-              orElse: () => selectedProvince.districts.first,
-            );
+            DistrictModel selectedDistrict = selectedProvince.districts
+                .firstWhere(
+                  (d) => d.name.toUpperCase() == 'İNEGÖL',
+                  orElse: () => selectedProvince.districts.first,
+                );
 
             return StatefulBuilder(
               builder: (ctx, setBottomSheetState) {
@@ -458,7 +574,10 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                       const SizedBox(height: 20),
 
                       // İl Dropdown
-                      Text('İl (81 İl)', style: AppTypography.labelMedium(color: accent)),
+                      Text(
+                        'İl (81 İl)',
+                        style: AppTypography.labelMedium(color: accent),
+                      ),
                       const SizedBox(height: 6),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -476,14 +595,17 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                             items: provinces.map((province) {
                               return DropdownMenuItem<ProvinceModel>(
                                 value: province,
-                                child: Text('${province.plateCode} - ${province.name}'),
+                                child: Text(
+                                  '${province.plateCode} - ${province.name}',
+                                ),
                               );
                             }).toList(),
                             onChanged: (newProvince) {
                               if (newProvince != null) {
                                 setBottomSheetState(() {
                                   selectedProvince = newProvince;
-                                  selectedDistrict = newProvince.districts.first;
+                                  selectedDistrict =
+                                      newProvince.districts.first;
                                 });
                               }
                             },
@@ -538,24 +660,32 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                             child: GestureDetector(
                               onTap: () async {
                                 Navigator.pop(ctx);
-                                final locService = ref.read(locationServiceProvider);
+                                final locService = ref.read(
+                                  locationServiceProvider,
+                                );
                                 await locService.clearCustomLocation();
                                 setState(() {});
-                                ref.read(prayerTimesProvider.notifier).refreshData();
+                                ref
+                                    .read(prayerTimesProvider.notifier)
+                                    .refreshData();
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       backgroundColor: surface2,
                                       content: Text(
                                         'Otomatik GPS moduna geçildi.',
-                                        style: AppTypography.bodySmall(color: textPrimary),
+                                        style: AppTypography.bodySmall(
+                                          color: textPrimary,
+                                        ),
                                       ),
                                     ),
                                   );
                                 }
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 decoration: BoxDecoration(
                                   color: surface2,
                                   borderRadius: BorderRadius.circular(16),
@@ -564,7 +694,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                                 child: Center(
                                   child: Text(
                                     'Otomatik GPS',
-                                    style: AppTypography.labelMedium(color: textSecondary),
+                                    style: AppTypography.labelMedium(
+                                      color: textSecondary,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -583,7 +715,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                                       backgroundColor: surface2,
                                       content: Text(
                                         'Konum koordinatları hesaplanıyor...',
-                                        style: AppTypography.bodySmall(color: textPrimary),
+                                        style: AppTypography.bodySmall(
+                                          color: textPrimary,
+                                        ),
                                       ),
                                     ),
                                   );
@@ -591,11 +725,13 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
 
                                 final coords = await TurkeyLocationService()
                                     .getCoordinatesForDistrict(
-                                  provinceName: selectedProvince.name,
-                                  districtName: selectedDistrict.name,
-                                );
+                                      provinceName: selectedProvince.name,
+                                      districtName: selectedDistrict.name,
+                                    );
 
-                                final locService = ref.read(locationServiceProvider);
+                                final locService = ref.read(
+                                  locationServiceProvider,
+                                );
                                 await locService.saveCustomLocation(
                                   city: selectedProvince.name,
                                   district: selectedDistrict.name,
@@ -604,7 +740,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                                 );
 
                                 setState(() {});
-                                ref.read(prayerTimesProvider.notifier).refreshData();
+                                ref
+                                    .read(prayerTimesProvider.notifier)
+                                    .refreshData();
 
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
@@ -612,14 +750,18 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                                       backgroundColor: surface2,
                                       content: Text(
                                         'Konum sabitlendi: ${selectedProvince.name} / ${selectedDistrict.name}',
-                                        style: AppTypography.bodySmall(color: textPrimary),
+                                        style: AppTypography.bodySmall(
+                                          color: textPrimary,
+                                        ),
                                       ),
                                     ),
                                   );
                                 }
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
                                 decoration: BoxDecoration(
                                   color: accent,
                                   borderRadius: BorderRadius.circular(16),
@@ -628,7 +770,9 @@ class _SettingsViewState extends ConsumerState<SettingsView> {
                                   child: Text(
                                     'Konumu Kaydet',
                                     style: AppTypography.labelMedium(
-                                      color: isDark ? AppColors.darkBackground : Colors.white,
+                                      color: isDark
+                                          ? AppColors.darkBackground
+                                          : Colors.white,
                                     ),
                                   ),
                                 ),
@@ -659,10 +803,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        title,
-        style: AppTypography.overline(color: color),
-      ),
+      child: Text(title, style: AppTypography.overline(color: color)),
     );
   }
 }
@@ -691,7 +832,9 @@ class _ThemeTile extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
         title: Text(
           title,
-          style: AppTypography.headlineSmall(color: textPrimary).copyWith(fontSize: 14),
+          style: AppTypography.headlineSmall(
+            color: textPrimary,
+          ).copyWith(fontSize: 14),
         ),
         trailing: isSelected
             ? Icon(Icons.check_circle_rounded, color: accent, size: 20)
@@ -729,7 +872,9 @@ class _NotifTypeTile extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         title: Text(
           title,
-          style: AppTypography.headlineSmall(color: textPrimary).copyWith(fontSize: 14),
+          style: AppTypography.headlineSmall(
+            color: textPrimary,
+          ).copyWith(fontSize: 14),
         ),
         subtitle: Text(
           subtitle,
@@ -737,7 +882,11 @@ class _NotifTypeTile extends StatelessWidget {
         ),
         trailing: isSelected
             ? Icon(Icons.radio_button_checked_rounded, color: accent, size: 20)
-            : Icon(Icons.radio_button_off_rounded, color: textSecondary, size: 20),
+            : Icon(
+                Icons.radio_button_off_rounded,
+                color: textSecondary,
+                size: 20,
+              ),
       ),
     );
   }

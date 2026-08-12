@@ -12,18 +12,40 @@ class KazaTakipView extends StatelessWidget {
   const KazaTakipView({super.key});
 
   static const List<_KazaItem> _items = [
-    _KazaItem(key: 'sabah', title: 'Sabah Namazı', icon: Icons.wb_twilight_rounded),
+    _KazaItem(
+      key: 'sabah',
+      title: 'Sabah Namazı',
+      icon: Icons.wb_twilight_rounded,
+    ),
     _KazaItem(key: 'ogle', title: 'Öğle Namazı', icon: Icons.wb_sunny_rounded),
-    _KazaItem(key: 'ikindi', title: 'İkindi Namazı', icon: Icons.wb_sunny_outlined),
-    _KazaItem(key: 'aksam', title: 'Akşam Namazı', icon: Icons.nights_stay_outlined),
-    _KazaItem(key: 'yatsi', title: 'Yatsı Namazı', icon: Icons.nights_stay_rounded),
-    _KazaItem(key: 'oruc', title: 'Kaza Orucu', icon: Icons.calendar_today_rounded),
+    _KazaItem(
+      key: 'ikindi',
+      title: 'İkindi Namazı',
+      icon: Icons.wb_sunny_outlined,
+    ),
+    _KazaItem(
+      key: 'aksam',
+      title: 'Akşam Namazı',
+      icon: Icons.nights_stay_outlined,
+    ),
+    _KazaItem(
+      key: 'yatsi',
+      title: 'Yatsı Namazı',
+      icon: Icons.nights_stay_rounded,
+    ),
+    _KazaItem(
+      key: 'oruc',
+      title: 'Kaza Orucu',
+      icon: Icons.calendar_today_rounded,
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
     final textHint = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
 
     return Scaffold(
@@ -41,7 +63,7 @@ class KazaTakipView extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Sayılara dokunarak manuel borç girebilirsiniz',
+                'Kaza namazlarınızı takip edebilirsiniz',
                 style: AppTypography.bodySmall(color: textHint),
               ),
               const SizedBox(height: 20),
@@ -49,7 +71,8 @@ class KazaTakipView extends StatelessWidget {
                 child: ListView.separated(
                   physics: const BouncingScrollPhysics(),
                   itemCount: _items.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     return _KazaCard(item: _items[index]);
                   },
@@ -68,11 +91,7 @@ class _KazaItem {
   final String title;
   final IconData icon;
 
-  const _KazaItem({
-    required this.key,
-    required this.title,
-    required this.icon,
-  });
+  const _KazaItem({required this.key, required this.title, required this.icon});
 }
 
 /// OPTIMIZATIONS.md: Sadece ilgili kartın sayacı [ref.watch(select)] ile izole edilir
@@ -84,23 +103,36 @@ class _KazaCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = isDark ? AppColors.darkAccentPrimary : AppColors.lightAccentPrimary;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final accent = isDark
+        ? AppColors.darkAccentPrimary
+        : AppColors.lightAccentPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
     final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final surface2 = isDark ? AppColors.darkSurface2 : AppColors.lightSurface2;
     final divider = isDark ? AppColors.darkDivider : AppColors.lightDivider;
 
-    final count = ref.watch(kazaProvider.select((s) {
-      switch (item.key) {
-        case 'sabah': return s.sabah;
-        case 'ogle': return s.ogle;
-        case 'ikindi': return s.ikindi;
-        case 'aksam': return s.aksam;
-        case 'yatsi': return s.yatsi;
-        case 'oruc': return s.oruc;
-        default: return 0;
-      }
-    }));
+    final count = ref.watch(
+      kazaProvider.select((s) {
+        switch (item.key) {
+          case 'sabah':
+            return s.sabah;
+          case 'ogle':
+            return s.ogle;
+          case 'ikindi':
+            return s.ikindi;
+          case 'aksam':
+            return s.aksam;
+          case 'yatsi':
+            return s.yatsi;
+          case 'oruc':
+            return s.oruc;
+          default:
+            return 0;
+        }
+      }),
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -118,7 +150,9 @@ class _KazaCard extends ConsumerWidget {
               item.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.headlineSmall(color: textPrimary).copyWith(fontSize: 14),
+              style: AppTypography.headlineSmall(
+                color: textPrimary,
+              ).copyWith(fontSize: 14),
             ),
           ),
           const SizedBox(width: 6),
@@ -140,10 +174,9 @@ class _KazaCard extends ConsumerWidget {
                 children: [
                   Text(
                     '$count',
-                    style: AppTypography.headlineMedium(color: textPrimary).copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: AppTypography.headlineMedium(
+                      color: textPrimary,
+                    ).copyWith(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(width: 4),
                   Icon(
@@ -195,9 +228,15 @@ class _KazaCard extends ConsumerWidget {
     int currentCount,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = isDark ? AppColors.darkAccentPrimary : AppColors.lightAccentPrimary;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final accent = isDark
+        ? AppColors.darkAccentPrimary
+        : AppColors.lightAccentPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final surface2 = isDark ? AppColors.darkSurface2 : AppColors.lightSurface2;
     final divider = isDark ? AppColors.darkDivider : AppColors.lightDivider;
@@ -239,13 +278,20 @@ class _KazaCard extends ConsumerWidget {
                   controller: controller,
                   keyboardType: TextInputType.number,
                   autofocus: true,
-                  style: AppTypography.displaySmall(color: textPrimary).copyWith(fontSize: 22),
+                  style: AppTypography.displaySmall(
+                    color: textPrimary,
+                  ).copyWith(fontSize: 22),
                   decoration: InputDecoration(
                     filled: true,
                     fillColor: surface2,
                     hintText: '0',
-                    hintStyle: AppTypography.displaySmall(color: textSecondary).copyWith(fontSize: 22),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    hintStyle: AppTypography.displaySmall(
+                      color: textSecondary,
+                    ).copyWith(fontSize: 22),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(color: divider, width: 1),
@@ -267,7 +313,10 @@ class _KazaCard extends ConsumerWidget {
                     GestureDetector(
                       onTap: () => Navigator.of(dialogContext).pop(),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: surface2,
                           borderRadius: BorderRadius.circular(14),
@@ -275,7 +324,9 @@ class _KazaCard extends ConsumerWidget {
                         ),
                         child: Text(
                           'İptal',
-                          style: AppTypography.labelMedium(color: textSecondary),
+                          style: AppTypography.labelMedium(
+                            color: textSecondary,
+                          ),
                         ),
                       ),
                     ),
@@ -288,7 +339,10 @@ class _KazaCard extends ConsumerWidget {
                         Navigator.of(dialogContext).pop();
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: accent.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
@@ -339,7 +393,9 @@ class _ActionButton extends StatelessWidget {
           color: isPrimary ? accentColor.withValues(alpha: 0.15) : surfaceColor,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isPrimary ? accentColor.withValues(alpha: 0.5) : dividerColor,
+            color: isPrimary
+                ? accentColor.withValues(alpha: 0.5)
+                : dividerColor,
             width: 1,
           ),
         ),

@@ -7,7 +7,7 @@ import '../widgets/compass_dial_widget.dart';
 
 /// Kıble Pusulası Ekranı (Faz 5).
 /// AGENTS.md: ConsumerWidget, Flat Premium stil, <200 satır view sınırı.
-/// OPTIMIZATIONS.md: 60 FPS pusula güncellemeleri yalnızca [CompassDialWidget] 
+/// OPTIMIZATIONS.md: 60 FPS pusula güncellemeleri yalnızca [CompassDialWidget]
 /// ve lokal [Consumer] içerisinde izole edilir.
 class QiblaView extends ConsumerWidget {
   const QiblaView({super.key});
@@ -15,9 +15,15 @@ class QiblaView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accent = isDark ? AppColors.darkAccentPrimary : AppColors.lightAccentPrimary;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final accent = isDark
+        ? AppColors.darkAccentPrimary
+        : AppColors.lightAccentPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final textHint = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
 
     final qiblaBearingAsync = ref.watch(qiblaBearingProvider);
@@ -37,7 +43,7 @@ class QiblaView extends ConsumerWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Konumunuza özel Kâbe yönü',
+                'Konumunuza göre Kâbenin yönü',
                 style: AppTypography.bodySmall(color: textHint),
               ),
 
@@ -45,14 +51,14 @@ class QiblaView extends ConsumerWidget {
 
               // Kıble açısı hesaplama durumu (Location -> Qibla Bearing)
               qiblaBearingAsync.when(
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, _) => Center(
                   child: Text(
                     'Konum alınamadı: $err',
                     style: AppTypography.bodyMedium(
-                      color: isDark ? AppColors.darkError : AppColors.lightError,
+                      color: isDark
+                          ? AppColors.darkError
+                          : AppColors.lightError,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -70,15 +76,22 @@ class QiblaView extends ConsumerWidget {
                           style: AppTypography.bodyMedium(color: textHint),
                         ),
                         data: (compassEvent) {
-                          if (compassEvent == null || compassEvent.heading == null) {
+                          if (compassEvent == null ||
+                              compassEvent.heading == null) {
                             return Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.compass_calibration_outlined, size: 48, color: textHint),
+                                Icon(
+                                  Icons.compass_calibration_outlined,
+                                  size: 48,
+                                  color: textHint,
+                                ),
                                 const SizedBox(height: 12),
                                 Text(
                                   'Cihazınızda pusula sensörü bulunamadı veya kalibre ediliyor.',
-                                  style: AppTypography.bodyMedium(color: textSecondary),
+                                  style: AppTypography.bodyMedium(
+                                    color: textSecondary,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -86,8 +99,11 @@ class QiblaView extends ConsumerWidget {
                           }
 
                           final double heading = compassEvent.heading!;
-                          final double diff = (qiblaBearing - heading + 360) % 360;
-                          final double relativeDiff = diff > 180 ? diff - 360 : diff;
+                          final double diff =
+                              (qiblaBearing - heading + 360) % 360;
+                          final double relativeDiff = diff > 180
+                              ? diff - 360
+                              : diff;
                           final bool isAligned = relativeDiff.abs() <= 3.0;
 
                           return Column(
@@ -103,16 +119,23 @@ class QiblaView extends ConsumerWidget {
 
                               // Sapma derecesi bilgi kartı (Flat Premium)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 24,
+                                  vertical: 14,
+                                ),
                                 decoration: BoxDecoration(
                                   color: isAligned
                                       ? accent.withValues(alpha: 0.12)
-                                      : (isDark ? AppColors.darkSurface2 : AppColors.lightSurface2),
+                                      : (isDark
+                                            ? AppColors.darkSurface2
+                                            : AppColors.lightSurface2),
                                   borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
                                     color: isAligned
                                         ? accent
-                                        : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
+                                        : (isDark
+                                              ? AppColors.darkDivider
+                                              : AppColors.lightDivider),
                                     width: 1,
                                   ),
                                 ),
@@ -120,7 +143,9 @@ class QiblaView extends ConsumerWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
-                                      isAligned ? Icons.check_circle_rounded : Icons.explore_outlined,
+                                      isAligned
+                                          ? Icons.check_circle_rounded
+                                          : Icons.explore_outlined,
                                       color: isAligned ? accent : textSecondary,
                                       size: 20,
                                     ),
